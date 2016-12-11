@@ -16,7 +16,7 @@ implicit none
 call PosPart
 end program deuxD
 
-!Position alÃ©atoire des particules
+!Position aleatoire des particules
 subroutine PosPart
 use general
 implicit none
@@ -101,7 +101,7 @@ call PosPart
 
 do i = 1, npart - 1; do p = i + 1, npart                 !pot ressenti par la part i des p autres part
   dx(i, p) = pos(i, 1) - pos(p, 1)                    !distance en x de la ième part avec les p autrees part
-  dy(i, p) = pos(i, 2) - pos(p, 2)                    !!distance en y de la ième part avec les p autrees part  
+  dy(i, p) = pos(i, 2) - pos(p, 2)                    !!distance en y de la ième part avec les p autrees part
   U(i, p) = 4 * U0 * ((R / sqrt(dx(i, p) ** 2 + dy(i, p) ** 2)) ** 12 - (R / sqrt(dx(i, p) ** 2 + dy(i, p) ** 2)) ** 6)
 end do
 Ueff(i) = sum(U(i,:))      !somme de tous les elements de la ligne i
