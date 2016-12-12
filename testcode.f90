@@ -1,9 +1,9 @@
 module general
 implicit none
 integer :: i, p, j
-integer, parameter :: a = 10, npart = 100, T = 500
+integer, parameter :: a = 10, npart = 100, Pi = atan(1)*4
 real(8), dimension(npart, 2) :: pos
-real(8), parameter :: R = 0.1, dt=0.1, m = 0.00001, v0 = 1, U0 = 1
+real(8), parameter :: R = 0.1, dt=0.01, m = 0.00001, U0 = 1
 
 
 end module general
@@ -11,16 +11,19 @@ end module general
 program deuxD
 use general
 implicit none
-real(8) :: v1, v2, r0, r1, r2, a0, a1, a2, xi, yi, dt = 0.01
+real(8) :: v1, v2, r0, r1, r2, a0, a1, a2, xi, yi
+real(8) :: LennardJones, gauss
+integer :: x, y,
+
+
 !Verlet
 call PosPart      !crée positions initiale
-call LennardJones !potentiel interatomes
 
-real(8) :: gauss, v1, v2, r0, r1, r2, a0, a1, a2, xi, yi, dt = 0.01
+
 open(20, file = 'newpos.res')
-read(10, *) x, y
-do t = 1, T; do i = 1, npart
-  dt = t*dt
+
+do step = 1, nstep
+  t = step*dt
 !call newpos.res if it doesn't exist call use PosPart
 
   do i = 1, npart - 1; do p = i + 1, npart                 !pot ressenti par la part i des p autres part
@@ -28,43 +31,47 @@ do t = 1, T; do i = 1, npart
     dy(i, p) = pos(i, 2) - pos(p, 2)
   end do
 
-  r = sqrt(minval(dx)**2 + minval(dy)**2)       !!distance en y de la ième part avec les p autrees part
-  a0 = f(1) / m
-  r1 = r
-  v0 = gauss()
-  v1 = v0
-    do j = 1, npart
+  if (i = 1 ) then
+    r = sqrt(minval(dx)**2 + minval(dy)**2)
+    LennardJones(r)      !!distance en y de la ième part avec les p autrees part
+    a0 = f / m
+    r1 = r
+    v0 = gauss()
+    v1 = v0
+    theta = random_number()*2*Pi
+  endif
 
-      r2 = r1 + dt * v1 +((dt ** 2) / 2) * a0               !1=t et 2=t+1
-      a1 = 24 / m * (2 * (R ** 12 / r2 ** 13) - ( R ** 6 / r2 ** 7))
-      v2 = v1 + (dt / 2 ) * (a0 + a1)
-    enddo
+  do j = 1, npart
 
-  r1 = r2                                    !nouvelles valeurs
-  v1 = v2
-  a0 = a1
+    r2 = r1 + dt * v1 +((dt ** 2) / 2) * a0               !1=t et 2=t+1
+    a1 = 24 / m * (2 * (R ** 12 / r2 ** 13) - ( R ** 6 / r2 ** 7))
+    v2 = v1 + (dt / 2 ) * (a0 + a1)
+
+    if (t > 1) then
+
+      x = pos(j,1) + cos(theta)*v1*dt
+      y = pos(j,2) + sin(theta)*v1*dt
+      write(20,*) x, y    !nouvelles positions apres dt pour toutes les particules
+  enddo
+
+r1 = r2                                    !nouvelles valeurs
+v1 = v2
+a0 = a1
 enddo
 
-write(20, *) r1, v1, a0
-enddo
-close(20)
-end
-
-close(20)
-
-call PosPart
 end program deuxD
 
 
 
 
 !Position aleatoire des particules
-subroutine PosPart
+function PosPart(pos)
 use general
 implicit none
+intent(out) :: pos
 real(8) xi, yi, xp, yp
 
-open(10, file = 'positions.res')
+
 
 createpoint: do i = 1, npart            !tirage de position aleatoire
 call random_number(xi)               !0<x<1, jaimerais faire un vrai nombre aléatoire entre 0 et a
@@ -80,12 +87,11 @@ pos(i, 2) = yi
       endif
     enddo
   endif
-write(10, *) pos(i, 1), pos(i, 2)
 
 enddo createpoint
 close(10)
 
-end
+end function PosPart
 
 !Verlet
 
