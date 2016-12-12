@@ -1,19 +1,18 @@
 module general
 implicit none
-integer :: i, p, j
-integer, parameter :: a = 10, npart = 100, Pi = atan(1)*4
+integer :: step, i, j, p
+integer, parameter :: a = 10, npart = 100, nstep = 1000
 real(8), dimension(npart, 2) :: pos
-real(8), parameter :: R = 0.1, dt=0.01, m = 0.00001, U0 = 1
-
-
+real(8), parameter :: R = 0.1, dt=0.01, m = 0.00001, U0 = 1, Pi = atan(1.)*4
 end module general
+
 
 program deuxD
 use general
 implicit none
-real(8) :: v1, v2, r0, r1, r2, a0, a1, a2, xi, yi
+real(8) :: v1, v2, r0, r1, r2, a0, a1, a2, x, y, t, theta
 real(8) :: LennardJones, gauss
-integer :: x, y,
+real(8), dimension(npart - 1, npart - 1) :: dx, dy
 
 
 !Verlet
@@ -31,11 +30,10 @@ do step = 1, nstep
     dy(i, p) = pos(i, 2) - pos(p, 2)
   end do
 
-  if (i = 1 ) then
-    r = sqrt(minval(dx)**2 + minval(dy)**2)
+  if (i == 1 ) then
+    r1 = sqrt(minval(dx)**2 + minval(dy)**2)
     LennardJones(r)      !!distance en y de la ième part avec les p autrees part
     a0 = f / m
-    r1 = r
     v0 = gauss()
     v1 = v0
     theta = random_number()*2*Pi
@@ -52,6 +50,7 @@ do step = 1, nstep
       x = pos(j,1) + cos(theta)*v1*dt
       y = pos(j,2) + sin(theta)*v1*dt
       write(20,*) x, y    !nouvelles positions apres dt pour toutes les particules
+    endif
   enddo
 
 r1 = r2                                    !nouvelles valeurs
@@ -60,8 +59,6 @@ a0 = a1
 enddo
 
 end program deuxD
-
-
 
 
 !Position aleatoire des particules
@@ -147,7 +144,6 @@ real, parameter :: a1 = 3.949846138, a3 = 0.252408784, a5 = 0.076542912, &
                    a7 = 0.008355968, a9 = 0.029899776
 real :: r, r2, dummy
 real, dimension(12) :: s
-integer :: i
 
 call random_number(s) ; r = (sum(s)-6.0)/4.0 ; r2 = r*r
 gauss =  (((( a9 * r2 + a7 ) * r2 + a5 ) * r2 + a3 ) * r2 + a1 )*r
